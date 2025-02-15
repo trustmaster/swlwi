@@ -2,6 +2,10 @@
 
 Welcome to the Software Leads Weekly Index (SWLWi) project! This project aims to transform the [Software Leads Weekly (SWLW) mailing list](https://softwareleadweekly.com/) into a comprehensive knowledge base for software engineering managers and leaders. By scraping, processing, and indexing the content of SWLW issues, we provide an efficient way to query and retrieve valuable information using a Retrieval Augmented Generation (RAG) model.
 
+![SWLWi RAG Flow open in Flyde](flyde-rag.avif)
+
+Build with [Flyde](https://flyde.dev) - Visual Programming tool for modern developers - and [PyFlyde](https://github.com/trustmaster/pyflyde) - Python library and runtime for Flyde with emphasis on Data-driven applications.
+
 ## Table of Contents
 
 - [Concept](#concept)
