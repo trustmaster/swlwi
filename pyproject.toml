@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "swlwi"
+version = "0.0.1"
+requires-python = ">= 3.10"
+authors = [{ name = "Vladimir Sibirov" }]
+description = "Software Leads Weekly Intelligent Index"
+readme = "Readme.md"
+
+dependencies = [
+    "beautifulsoup4",
+    "langchain",
+    "langchain-community >= 0.3.2",
+    "langchain-core",
+    "langchain-ollama",
+    "langchain-text-splitters",
+    "markdownify",
+    "playwright",
+    "pyflyde >= 0.0.11",
+    "requests",
+    "streamlit",
+    "sqlite-vec",
+]
+
+[tool.setuptools.packages.find]
+where = ["swlwi"]
+
+[project.optional-dependencies]
+dev = ["setuptools", "build", "black", "coverage", "flake8", "mypy"]

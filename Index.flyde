@@ -1,0 +1,112 @@
+imports:
+  "@flyde/stdlib":
+    - InlineValue
+  swlwi/rag.flyde.ts:
+    - DocumentLoader
+    - DocumentSplitter
+    - ListArticles
+    - VectorStore
+node:
+  instances:
+    - pos:
+        x: -123.06474121093748
+        y: -113.7823486328125
+      id: DocumentLoader-xx04bf6
+      inputConfig: {}
+      nodeId: DocumentLoader
+    - pos:
+        x: -96.01762207031248
+        y: -325.7375183105469
+      id: nayy3m38b9mqwjx7spc7h654
+      inputConfig: {}
+      nodeId: InlineValue__nayy3m38b9mqwjx7spc7h654
+      macroId: InlineValue
+      macroData:
+        value:
+          type: string
+          value: ./index
+    - pos:
+        x: -123.938115234375
+        y: 33.571452636718746
+      id: DocumentSplitter-hi04btp
+      inputConfig: {}
+      nodeId: DocumentSplitter
+    - pos:
+        x: -99.54382446289063
+        y: -221.39071166992187
+      id: ListArticles-7z24bv6
+      inputConfig: {}
+      nodeId: ListArticles
+    - pos:
+        x: -69.61044799804688
+        y: 178.15218305477418
+      id: VectorStore-h104bej
+      inputConfig: {}
+      nodeId: VectorStore
+    - pos:
+        x: 105.98485046386713
+        y: 23.353573622321
+      id: cd3jei26nmk80q7x66gmics3
+      inputConfig: {}
+      nodeId: InlineValue__cd3jei26nmk80q7x66gmics3
+      macroId: InlineValue
+      macroData:
+        value:
+          type: string
+          value: ./index/vectors
+    - pos:
+        x: 146.69632324218747
+        y: -111.8844449153894
+      id: fsz82wvbt98cswdnj5oapm9n
+      inputConfig: {}
+      nodeId: InlineValue__fsz82wvbt98cswdnj5oapm9n
+      macroId: InlineValue
+      macroData:
+        value:
+          type: number
+          value: 2000
+  connections:
+    - from:
+        insId: DocumentLoader-xx04bf6
+        pinId: document
+      to:
+        insId: DocumentSplitter-hi04btp
+        pinId: document
+    - from:
+        insId: ListArticles-7z24bv6
+        pinId: article_path
+      to:
+        insId: DocumentLoader-xx04bf6
+        pinId: path
+    - from:
+        insId: nayy3m38b9mqwjx7spc7h654
+        pinId: value
+      to:
+        insId: ListArticles-7z24bv6
+        pinId: path
+    - from:
+        insId: DocumentSplitter-hi04btp
+        pinId: documents
+      to:
+        insId: VectorStore-h104bej
+        pinId: documents
+    - from:
+        insId: cd3jei26nmk80q7x66gmics3
+        pinId: value
+      to:
+        insId: VectorStore-h104bej
+        pinId: path
+    - from:
+        insId: fsz82wvbt98cswdnj5oapm9n
+        pinId: value
+      to:
+        insId: DocumentSplitter-hi04btp
+        pinId: chunk_size
+  id: Example
+  inputs: {}
+  outputs: {}
+  inputsPosition: {}
+  outputsPosition:
+    result:
+      x: -23.264428942324532
+      y: 237.25953921502617

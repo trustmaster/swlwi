@@ -1,0 +1,167 @@
+imports:
+  "@flyde/stdlib":
+    - InlineValue
+  swlwi/scrape.flyde.ts:
+    - ListIssues
+    - ExtractArticles
+    - FetchArticle
+    - SaveArticle
+    - ExtractArticleContent
+    - FetchArticleWithJavaScript
+    - SkipExistingIssues
+node:
+  instances:
+    - pos:
+        x: -243.74696166992186
+        y: -168.71527099609375
+      id: ListIssues-9c04bul
+      inputConfig:
+        limit:
+          mode: sticky
+      nodeId: ListIssues
+    - pos:
+        x: -530.0440844726562
+        y: -316.8473034667969
+      id: x8lrqs61rkelmrrs0al73b4p
+      inputConfig: {}
+      nodeId: InlineValue__x8lrqs61rkelmrrs0al73b4p
+      macroId: InlineValue
+      macroData:
+        value:
+          type: string
+          value: https://softwareleadweekly.com/issues/
+    - pos:
+        x: -262.5466003417969
+        y: 64.36930969238279
+      id: ExtractArticles-3x24bo9
+      inputConfig: {}
+      nodeId: ExtractArticles
+    - pos:
+        x: -268.1486022949219
+        y: 619.0657638549804
+      id: SaveArticle-nb04b5g
+      inputConfig:
+        path:
+          mode: sticky
+      nodeId: SaveArticle
+    - pos:
+        x: 101.92635742187497
+        y: -188.82347568511966
+      id: m0yqmomtd8040yzj14sjec3e
+      inputConfig: {}
+      nodeId: InlineValue__m0yqmomtd8040yzj14sjec3e
+      macroId: InlineValue
+      macroData:
+        value:
+          type: string
+          value: ./index
+    - pos:
+        x: -68.47666015624998
+        y: -313.2546252441406
+      id: ptybffn2cj3ehxd5w7ny2mno
+      inputConfig: {}
+      nodeId: InlineValue__ptybffn2cj3ehxd5w7ny2mno
+      macroId: InlineValue
+      macroData:
+        value:
+          type: number
+          value: 1
+    - pos:
+        x: -266.70849853515625
+        y: 196.01814758300782
+      id: FetchArticle-qe04bea
+      inputConfig: {}
+      nodeId: FetchArticle
+    - pos:
+        x: -350.8709912109375
+        y: 466.3576455688476
+      id: ExtractArticleContent-el14bpd
+      inputConfig: {}
+      nodeId: ExtractArticleContent
+    - pos:
+        x: -270.255634765625
+        y: 329.24641662597656
+      id: FetchArticleWithJavaScript-g024b0t
+      inputConfig: {}
+      nodeId: FetchArticleWithJavaScript
+    - pos:
+        x: -201.3297338867187
+        y: -44.63693362402307
+      id: SkipExistingIssues-if04b5c
+      inputConfig: {}
+      nodeId: SkipExistingIssues
+  connections:
+    - from:
+        insId: x8lrqs61rkelmrrs0al73b4p
+        pinId: value
+      to:
+        insId: ListIssues-9c04bul
+        pinId: url
+    - from:
+        insId: m0yqmomtd8040yzj14sjec3e
+        pinId: value
+      to:
+        insId: SaveArticle-nb04b5g
+        pinId: path
+    - from:
+        insId: ptybffn2cj3ehxd5w7ny2mno
+        pinId: value
+      to:
+        insId: ListIssues-9c04bul
+        pinId: limit
+    - from:
+        insId: FetchArticle-qe04bea
+        pinId: complete
+      to:
+        insId: ExtractArticleContent-el14bpd
+        pinId: article
+    - from:
+        insId: ExtractArticleContent-el14bpd
+        pinId: article
+      to:
+        insId: SaveArticle-nb04b5g
+        pinId: article
+    - from:
+        insId: FetchArticle-qe04bea
+        pinId: needs_javascript
+      to:
+        insId: FetchArticleWithJavaScript-g024b0t
+        pinId: article
+    - from:
+        insId: FetchArticleWithJavaScript-g024b0t
+        pinId: article
+      to:
+        insId: ExtractArticleContent-el14bpd
+        pinId: article
+    - from:
+        insId: ExtractArticles-3x24bo9
+        pinId: article
+      to:
+        insId: FetchArticle-qe04bea
+        pinId: article
+    - from:
+        insId: ListIssues-9c04bul
+        pinId: issue
+      to:
+        insId: SkipExistingIssues-if04b5c
+        pinId: issue
+    - from:
+        insId: SkipExistingIssues-if04b5c
+        pinId: issue
+      to:
+        insId: ExtractArticles-3x24bo9
+        pinId: issue
+    - from:
+        insId: m0yqmomtd8040yzj14sjec3e
+        pinId: value
+      to:
+        insId: SkipExistingIssues-if04b5c
+        pinId: path
+  id: Example
+  inputs: {}
+  outputs: {}
+  inputsPosition: {}
+  outputsPosition:
+    result:
+      x: -23.264428942324532
+      y: 237.25953921502617
