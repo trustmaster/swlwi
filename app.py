@@ -33,7 +33,7 @@ def wrap_flow() -> FlowWrapper:
     # Run the flow (in a separate thread)
     flow.run()
 
-    return FlowWrapper(query_q, response_q, flow)
+    return FlowWrapper(flow, query_q, response_q)
 
 
 # UI header

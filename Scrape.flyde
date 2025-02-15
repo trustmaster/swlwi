@@ -65,7 +65,7 @@ node:
       macroData:
         value:
           type: number
-          value: 100
+          value: 50
     - pos:
         x: -266.70849853515625
         y: 196.01814758300782

@@ -57,7 +57,7 @@ Make sure you have Python 3.10+ installed.
 To scrape SWLW issues and save the articles locally, run the following command:
 
 ```bash
-pyflyde swlwi/Scrape.flyde
+pyflyde Scrape.flyde
 ```
 
 ### Indexing Articles
@@ -65,7 +65,7 @@ pyflyde swlwi/Scrape.flyde
 To index the articles and create embeddings, run the following command:
 
 ```bash
-pyflyde swlwi/Index.flyde
+pyflyde Index.flyde
 ```
 
 ### Querying the Knowledge Base
@@ -73,7 +73,7 @@ pyflyde swlwi/Index.flyde
 To query the knowledge base using the Streamlit UI, run the following command:
 
 ```bash
-streamlit run swlwi/app.py
+streamlit run app.py
 ```
 
 ## Contributing

@@ -1,6 +1,6 @@
 """Retrieval Augmented Generation (RAG) model."""
 
-from langchain_community.embeddings.sentence_transformer import SentenceTransformerEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 import ollama
 import os
 from flyde.io import Input, InputMode, Output
@@ -109,9 +109,11 @@ class VectorStore(Component):
     def init(self, path: str):
         if not hasattr(self, "_embeddings"):
             logger.info("Loading embeddings")
-            self._embeddings = SentenceTransformerEmbeddings(model_name="all-MiniLM-L6-v2")
+            self._embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
         if not hasattr(self, "_vector_store"):
             logger.info("Creating vector store")
+            # Create path if not exists
+            os.makedirs(path, exist_ok=True)
             self._vector_store = SQLiteVec(
                 table="swlwi_embeddings", connection=None, db_file=f"{path}/db.sqlite3", embedding=self._embeddings
             )
@@ -135,7 +137,7 @@ class Retriever(Component):
 
     def init(self, path: str):
         if not hasattr(self, "_embeddings"):
-            self._embeddings = SentenceTransformerEmbeddings(model_name="all-MiniLM-L6-v2")
+            self._embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
         if not hasattr(self, "_vector_store"):
             print(f"Opening vector store with path {path}/db.sqlite")
             self._vector_store = SQLiteVec(

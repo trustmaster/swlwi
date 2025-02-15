@@ -14,6 +14,7 @@ dependencies = [
     "beautifulsoup4",
     "langchain",
     "langchain-community >= 0.3.2",
+    "langchain-huggingface",
     "langchain-core",
     "langchain-ollama",
     "langchain-text-splitters",
@@ -21,6 +22,7 @@ dependencies = [
     "playwright",
     "pyflyde >= 0.0.11",
     "requests",
+    "sentence-transformers",
     "streamlit",
     "sqlite-vec",
 ]
