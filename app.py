@@ -4,9 +4,14 @@ from dataclasses import dataclass
 import os
 import signal
 import streamlit as st
+import torch
 from queue import Queue
 from flyde.flow import Flow
 from flyde.io import EOF
+
+
+# Fix streamlit torch classes path warning
+torch.classes.__path__ = []  # type: ignore
 
 
 # A structure to hold our appication's state

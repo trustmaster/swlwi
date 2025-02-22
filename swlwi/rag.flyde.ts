@@ -74,3 +74,16 @@ export const OllamaChat: CodeNode = {
   run: () => { return; },
 };
 
+export const OpenAIChat: CodeNode = {
+  id: "OpenAIChat",
+  description: "Chat with the OpenAI model.",
+  inputs: {
+    query: { description: "Query text" },
+    context: { description: "Context text" }
+  },
+  outputs: {
+    response: { description: "Response from the OpenAI model" }
+  },
+  run: () => { return; },
+};
+

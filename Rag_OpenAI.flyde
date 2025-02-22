@@ -1,0 +1,80 @@
+imports:
+  "@flyde/stdlib":
+    - InlineValue
+  swlwi/rag.flyde.ts:
+    - Retriever
+    - OpenAIChat
+node:
+  instances:
+    - pos:
+        x: -222.12446777343752
+        y: -185.91035644531252
+      id: Retriever-1104c19
+      inputConfig: {}
+      nodeId: Retriever
+    - pos:
+        x: -125.36903320312501
+        y: -366.40141845703124
+      id: bd0bokitgkgph2eupesihbtq
+      inputConfig: {}
+      nodeId: InlineValue__bd0bokitgkgph2eupesihbtq
+      macroId: InlineValue
+      macroData:
+        value:
+          type: string
+          value: ./index/vectors
+    - pos:
+        x: -302.66167724609375
+        y: -3.126666833802858
+      id: OpenAIChat-5004fq5
+      inputConfig: {}
+      nodeId: OpenAIChat
+  connections:
+    - from:
+        insId: bd0bokitgkgph2eupesihbtq
+        pinId: value
+      to:
+        insId: Retriever-1104c19
+        pinId: path
+    - from:
+        insId: __this
+        pinId: query
+      to:
+        insId: Retriever-1104c19
+        pinId: query
+    - from:
+        insId: __this
+        pinId: query
+      to:
+        insId: OpenAIChat-5004fq5
+        pinId: query
+    - from:
+        insId: Retriever-1104c19
+        pinId: context
+      to:
+        insId: OpenAIChat-5004fq5
+        pinId: context
+    - from:
+        insId: OpenAIChat-5004fq5
+        pinId: response
+      to:
+        insId: __this
+        pinId: response
+  id: Example
+  inputs:
+    query:
+      mode: required
+  outputs:
+    response:
+      delayed: false
+  inputsPosition:
+    query:
+      x: -233.997060546875
+      y: -404.73085693359377
+  outputsPosition:
+    result:
+      x: -23.264428942324532
+      y: 237.25953921502617
+    response:
+      x: -273.354287109375
+      y: 167.66263305664063

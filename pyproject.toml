@@ -17,6 +17,7 @@ dependencies = [
     "langchain-huggingface",
     "langchain-core",
     "langchain-ollama",
+    "langchain-openai",
     "langchain-text-splitters",
     "markdownify",
     "playwright",
