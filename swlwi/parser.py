@@ -1,5 +1,5 @@
 import re
-from typing import LiteralString
+
 from bs4 import BeautifulSoup, Tag
 from markdownify import MarkdownConverter
 
@@ -9,20 +9,20 @@ class CustomMarkdownConverter(MarkdownConverter):
         # Add double newlines after headings
         return super().convert_heading(*args, **kwargs) + "\n"  # type: ignore
 
-    def convert_p(self, el: Tag, text: str, convert_as_inline: bool) -> str:
+    def convert_p(self, *args, **kwargs) -> str:
         # Add double newlines after paragraphs
-        return super().convert_p(el, text, convert_as_inline) + "\n"
+        return super().convert_p(*args, **kwargs) + "\n"
 
-    def convert_list(self, el: Tag, text: str, convert_as_inline: bool = False) -> str:
+    def convert_list(self, *args, **kwargs) -> str:
         # Handle list spacing
-        converted = super().convert_list(el, text, convert_as_inline)
+        converted = super().convert_list(*args, **kwargs)
         if converted.strip():
             return converted + "\n"
         return converted
 
-    def convert_li(self, el: Tag, text: str, convert_as_inline: bool = False) -> LiteralString:
+    def convert_li(self, *args, **kwargs) -> str:
         # Ensure proper list item spacing
-        return super().convert_li(el, text, convert_as_inline).rstrip() + "\n"
+        return super().convert_li(*args, **kwargs).rstrip() + "\n"
 
 
 def html_to_markdown(html: bytes) -> str:
