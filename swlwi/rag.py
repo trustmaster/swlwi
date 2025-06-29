@@ -1,14 +1,16 @@
 """Retrieval Augmented Generation (RAG) model."""
 
-from langchain_huggingface import HuggingFaceEmbeddings
-import ollama
 import os
+import sqlite3
+
+import ollama
 from flyde.io import Input, InputMode, Output
 from flyde.node import Component, logger
-from langchain_core.documents import Document
-from langchain_text_splitters import MarkdownTextSplitter
 from langchain_community.vectorstores import SQLiteVec
+from langchain_core.documents import Document
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_openai import ChatOpenAI
+from langchain_text_splitters import MarkdownTextSplitter
 
 
 class ListArticles(Component):
@@ -123,7 +125,14 @@ class VectorStore(Component):
         logger.info(f"VectorStore Processing {len(documents)} documents")
         self._init(path)
         logger.info(f"Adding {len(documents)} documents from {documents[0].metadata['path']} to the vector store")
-        self._vector_store.add_documents(documents)
+        try:
+            self._vector_store.add_documents(documents)
+        except sqlite3.OperationalError as e:
+            if "UNIQUE constraint failed" in str(e):
+                logger.info("Some documents already exist in the vector store, skipping duplicates")
+            else:
+                # Re-raise if it's a different error
+                raise
 
 
 class Retriever(Component):
