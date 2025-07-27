@@ -1,95 +1,148 @@
-imports:
-  "@flyde/stdlib":
-    - InlineValue
-  swlwi/scrape.flyde.ts:
-    - ListIssues
-    - ExtractArticles
-    - FetchArticle
-    - SaveArticle
-    - ExtractArticleContent
-    - FetchArticleWithJavaScript
-    - SkipExistingIssues
+imports: {}
 node:
   instances:
     - pos:
-        x: -243.74696166992186
-        y: -168.71527099609375
+        x: -739.7959729003906
+        y: 60.612457275390625
       id: ListIssues-9c04bul
       inputConfig:
         limit:
           mode: sticky
       nodeId: ListIssues
+      config:
+        url:
+          type: dynamic
+          value: "{{url}}"
+        limit:
+          type: dynamic
+          value: "{{limit}}"
+      type: code
+      source:
+        type: custom
+        data: custom://swlwi/scrape.py/ListIssues
     - pos:
-        x: -530.0440844726562
-        y: -316.8473034667969
+        x: -1022.2418383789063
+        y: 42.062059326171834
       id: x8lrqs61rkelmrrs0al73b4p
       inputConfig: {}
-      nodeId: InlineValue__x8lrqs61rkelmrrs0al73b4p
-      macroId: InlineValue
-      macroData:
+      nodeId: InlineValue
+      config:
         value:
           type: string
           value: https://softwareleadweekly.com/issues/
+      type: code
+      source:
+        type: package
+        data: "@flyde/nodes"
     - pos:
-        x: -262.5466003417969
-        y: 64.36930969238279
+        x: -239.72811889648438
+        y: 81.4710705566406
       id: ExtractArticles-3x24bo9
       inputConfig: {}
       nodeId: ExtractArticles
+      config:
+        issue:
+          type: dynamic
+          value: "{{issue}}"
+      type: code
+      source:
+        type: custom
+        data: custom://swlwi/scrape.py/ExtractArticles
     - pos:
-        x: -268.1486022949219
-        y: 619.0657638549804
+        x: 742.4513122558594
+        y: 68.78033294677732
       id: SaveArticle-nb04b5g
       inputConfig:
         path:
           mode: sticky
       nodeId: SaveArticle
-    - pos:
-        x: 101.92635742187497
-        y: -188.82347568511966
-      id: m0yqmomtd8040yzj14sjec3e
-      inputConfig: {}
-      nodeId: InlineValue__m0yqmomtd8040yzj14sjec3e
-      macroId: InlineValue
-      macroData:
-        value:
+      config:
+        article:
+          type: dynamic
+          value: "{{article}}"
+        path:
           type: string
           value: ./index
+      type: code
+      source:
+        type: custom
+        data: custom://swlwi/scrape.py/SaveArticle
     - pos:
-        x: -68.47666015624998
-        y: -313.2546252441406
+        x: -1026.350927734375
+        y: 122.89628417968754
       id: ptybffn2cj3ehxd5w7ny2mno
       inputConfig: {}
-      nodeId: InlineValue__ptybffn2cj3ehxd5w7ny2mno
-      macroId: InlineValue
-      macroData:
+      nodeId: InlineValue
+      config:
         value:
           type: number
           value: 50
+      type: code
+      source:
+        type: package
+        data: "@flyde/nodes"
     - pos:
-        x: -266.70849853515625
-        y: 196.01814758300782
+        x: -20.022585449218752
+        y: 70.64859497070313
       id: FetchArticle-qe04bea
       inputConfig: {}
       nodeId: FetchArticle
+      config:
+        article:
+          type: dynamic
+          value: "{{article}}"
+      type: code
+      source:
+        type: custom
+        data: custom://swlwi/scrape.py/FetchArticle
     - pos:
-        x: -350.8709912109375
-        y: 466.3576455688476
+        x: 464.41825439453123
+        y: 70.21711212158198
       id: ExtractArticleContent-el14bpd
       inputConfig: {}
       nodeId: ExtractArticleContent
+      config:
+        article:
+          type: dynamic
+          value: "{{article}}"
+      type: code
+      source:
+        type: custom
+        data: custom://swlwi/scrape.py/ExtractArticleContent
     - pos:
-        x: -270.255634765625
-        y: 329.24641662597656
+        x: 183.04709960937498
+        y: 174.83584838867188
       id: FetchArticleWithJavaScript-g024b0t
       inputConfig: {}
       nodeId: FetchArticleWithJavaScript
+      config:
+        article:
+          type: dynamic
+          value: "{{article}}"
+      type: code
+      source:
+        type: custom
+        data: custom://swlwi/scrape.py/FetchArticleWithJavaScript
     - pos:
-        x: -201.3297338867187
-        y: -44.63693362402307
+        x: -494.79866699218746
+        y: 70.09725827050818
       id: SkipExistingIssues-if04b5c
       inputConfig: {}
       nodeId: SkipExistingIssues
+      config:
+        issue:
+          type: dynamic
+          value: "{{issue}}"
+        path:
+          type: string
+          value: ./index
+        force_all:
+          type: dynamic
+          value: "{{force_all}}"
+      type: code
+      source:
+        type: custom
+        data: custom://swlwi/scrape.py/SkipExistingIssues
   connections:
     - from:
         insId: x8lrqs61rkelmrrs0al73b4p
@@ -97,12 +150,6 @@ node:
       to:
         insId: ListIssues-9c04bul
         pinId: url
-    - from:
-        insId: m0yqmomtd8040yzj14sjec3e
-        pinId: value
-      to:
-        insId: SaveArticle-nb04b5g
-        pinId: path
     - from:
         insId: ptybffn2cj3ehxd5w7ny2mno
         pinId: value
@@ -151,12 +198,6 @@ node:
       to:
         insId: ExtractArticles-3x24bo9
         pinId: issue
-    - from:
-        insId: m0yqmomtd8040yzj14sjec3e
-        pinId: value
-      to:
-        insId: SkipExistingIssues-if04b5c
-        pinId: path
   id: Example
   inputs: {}
   outputs: {}

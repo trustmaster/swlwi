@@ -4,8 +4,7 @@ import logging
 import os
 import re
 import time
-from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import datetime
 
 import requests
 from bs4 import BeautifulSoup
@@ -15,35 +14,11 @@ from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeo
 from flyde.io import Input, InputMode, Output, Requiredness
 from flyde.node import Component
 from swlwi.parser import clean_markdown, html_to_markdown
+from swlwi.schema import Article, Issue
 
 log_level = getattr(logging, os.getenv("LOG_LEVEL", "INFO").upper(), logging.INFO)
 logging.basicConfig(level=log_level)
 logger = logging.getLogger(__name__)
-
-
-@dataclass
-class Issue:
-    """Represents a newsletter issue"""
-
-    num: int
-    url: str
-    date: date
-    item_of: tuple[int, int] = (0, 0)  # (current, total)
-
-
-@dataclass
-class Article:
-    """Represents an article within an issue"""
-
-    title: str
-    url: str
-    issue_num: int = 0
-    reading_time: int = 0  # minutes
-    summary: str = ""
-    html: bytes = b""
-    markdown: str = ""
-    item_of: tuple[int, int] = (0, 0)  # (current, total)
-    parent_item_of: tuple[int, int] = (0, 0)  # parent issue's item_of
 
 
 class ListIssues(Component):
@@ -75,7 +50,9 @@ class ListIssues(Component):
 
         # Process each issue
         for element in issue_elements:
-            issue = self._parse_issue_element(element, base_url, item_count, total_issues)
+            issue = self._parse_issue_element(
+                element, base_url, item_count, total_issues
+            )
 
             # Send the issue to the next component
             self.send("issue", issue)
@@ -89,7 +66,9 @@ class ListIssues(Component):
     def _find_issue_elements(self, soup: BeautifulSoup) -> list[PageElement]:
         return soup.find_all("div", class_="table-issue")
 
-    def _parse_issue_element(self, element: PageElement, base_url: str, item_count: int, total_issues: int):
+    def _parse_issue_element(
+        self, element: PageElement, base_url: str, item_count: int, total_issues: int
+    ):
         title_element = element.find("p", class_="title-table-issue")  # type: ignore
         link_element = title_element.find("a")
         issue_url = link_element["href"]
@@ -97,7 +76,9 @@ class ListIssues(Component):
         date_element = element.find("p", class_="text-table-issue")  # type: ignore
         issue_date_str = date_element.get_text(strip=True)
 
-        logger.debug(f"Found issue #{issue_num} of {total_issues} from {issue_date_str}: {issue_url}")
+        logger.debug(
+            f"Found issue #{issue_num} of {total_issues} from {issue_date_str}: {issue_url}"
+        )
 
         # Parse the date string
         issue_date_str = re.sub(r"(\d+)(st|nd|rd|th)", r"\1", issue_date_str)
@@ -110,7 +91,12 @@ class ListIssues(Component):
                 issue_url = "/" + issue_url
             issue_url = base_url + issue_url
 
-        return Issue(num=issue_num, url=issue_url, date=issue_date, item_of=(item_count, total_issues))
+        return Issue(
+            num=issue_num,
+            url=issue_url,
+            date=issue_date,
+            item_of=(item_count, total_issues),
+        )
 
 
 class SkipExistingIssues(Component):
@@ -133,6 +119,17 @@ class SkipExistingIssues(Component):
     }
 
     def process(self, issue: Issue, path: str, force_all: bool = False):
+        print(
+            "Issue in SkipExistingIssues.inputs:",
+            self.inputs["issue"].type,
+            self.inputs["issue"].type.__module__,
+        )
+        print(
+            "Issue in SkipExistingIssues.outputs:",
+            self.outputs["issue"].type,
+            self.outputs["issue"].type.__module__,
+        )
+        print("Type of value being sent:", type(issue), type(issue).__module__)
         logger.debug(f"Checking if issue #{issue.num} exists. Force all: {force_all}")
         if force_all:
             logger.info(f"Force processing issue #{issue.num}")
@@ -142,7 +139,9 @@ class SkipExistingIssues(Component):
         # Check if the issue exists
         issue_path = os.path.join(path, f"issue-{issue.num}")
         if not os.path.exists(issue_path):
-            logger.info(f"Issue #{issue.num} not found at path '{issue_path}'. Processing.")
+            logger.info(
+                f"Issue #{issue.num} not found at path '{issue_path}'. Processing."
+            )
             self.send("issue", issue)
         else:
             logger.info(f"Issue #{issue.num} already exists. Skipping.")
@@ -192,7 +191,9 @@ class ExtractArticles(Component):
             total_articles += len(article_divs)
         return total_articles
 
-    def _extract_article(self, div: PageElement, issue: Issue, item_count: int, total_articles: int) -> Article | None:
+    def _extract_article(
+        self, div: PageElement, issue: Issue, item_count: int, total_articles: int
+    ) -> Article | None:
         title_element = div.find("a", class_="post-title")  # type: ignore
         if not title_element:
             return None
@@ -263,7 +264,9 @@ class _RateLimiter:
             elapsed = (now - self._last_request_time[domain]).total_seconds()
             if elapsed < self._timeout:
                 sleep_time = self._timeout - elapsed
-                logger.debug(f"Rate limiting: sleeping for {sleep_time:.2f} seconds before fetching from {domain}")
+                logger.debug(
+                    f"Rate limiting: sleeping for {sleep_time:.2f} seconds before fetching from {domain}"
+                )
                 time.sleep(sleep_time)
         self._last_request_time[domain] = datetime.now()
 
@@ -277,7 +280,9 @@ class FetchArticle(Component):
 
     outputs = {
         "complete": Output(description="Article with HTML content", type=Article),
-        "needs_javascript": Output(description="Article that needs JavaScript to fetch", type=Article),
+        "needs_javascript": Output(
+            description="Article that needs JavaScript to fetch", type=Article
+        ),
     }
 
     _rate_limiter = _RateLimiter()
@@ -288,8 +293,14 @@ class FetchArticle(Component):
         if domain in ["x.com", "youtube.com"]:
             return {"complete": article}
 
-        if domain in ["medium.com", "substack.com"] or ".medium.com" in domain or "substack.com" in domain:
-            logging.debug(f"Article '{article.title}' at {article.url} is on Medium and needs JavaScript to fetch")
+        if (
+            domain in ["medium.com", "substack.com"]
+            or ".medium.com" in domain
+            or "substack.com" in domain
+        ):
+            logging.debug(
+                f"Article '{article.title}' at {article.url} is on Medium and needs JavaScript to fetch"
+            )
             return {"needs_javascript": article}
 
         self._rate_limiter.wait(domain)
@@ -312,23 +323,33 @@ class FetchArticle(Component):
             response = requests.get(article.url, headers=headers)
 
             if response.status_code == 403 or "cloudflare" in response.text.lower():
-                logging.warning(f"CloudFlare protection detected for '{article.title}' at {article.url}")
+                logging.warning(
+                    f"CloudFlare protection detected for '{article.title}' at {article.url}"
+                )
                 return {"needs_javascript": article}
 
             if re.findall(r"enable.+javascript", response.text, re.IGNORECASE):
-                logging.debug(f"Article '{article.title}' at {article.url} needs JavaScript to fetch")
+                logging.debug(
+                    f"Article '{article.title}' at {article.url} needs JavaScript to fetch"
+                )
                 return {"needs_javascript": article}
 
             encoding = (
-                response.encoding.lower() if response.encoding and response.encoding.lower() != "utf-8" else "utf-8"
+                response.encoding.lower()
+                if response.encoding and response.encoding.lower() != "utf-8"
+                else "utf-8"
             )
 
             article.html = (
-                response.content.decode(encoding).encode("utf-8") if encoding != "utf-8" else response.content
+                response.content.decode(encoding).encode("utf-8")
+                if encoding != "utf-8"
+                else response.content
             )
 
         except Exception as e:
-            logging.error(f"Failed to fetch article '{article.title}' at {article.url}: {e}")
+            logging.error(
+                f"Failed to fetch article '{article.title}' at {article.url}: {e}"
+            )
             return {"needs_javascript": article}
 
         logging.info(f"Fetched article '{article.title}' at {article.url}")
@@ -362,7 +383,9 @@ class FetchArticleWithJavaScript(Component):
 
             for selector in challenge_selectors:
                 if page.locator(selector).count() > 0:
-                    logging.info("CloudFlare challenge detected, waiting for completion...")
+                    logging.info(
+                        "CloudFlare challenge detected, waiting for completion..."
+                    )
                     # Wait for challenge to disappear
                     page.wait_for_selector(selector, state="detached", timeout=30000)
                     # Additional wait to ensure page is fully loaded
@@ -386,7 +409,8 @@ class FetchArticleWithJavaScript(Component):
                     page.locator(".article-content").count() > 0,
                     # More generic content checks
                     len(page.query_selector_all("p")) > 3,  # At least 3 paragraphs
-                    len(page.query_selector_all("h1,h2,h3")) > 0,  # At least one heading
+                    len(page.query_selector_all("h1,h2,h3"))
+                    > 0,  # At least one heading
                 ]
             )
 
@@ -437,13 +461,17 @@ class FetchArticleWithJavaScript(Component):
 
                 attempt += 1
                 if attempt < max_attempts:
-                    logging.warning(f"Content not found, attempt {attempt + 1} of {max_attempts}")
+                    logging.warning(
+                        f"Content not found, attempt {attempt + 1} of {max_attempts}"
+                    )
                     time.sleep(2)
 
             except PlaywrightTimeoutError:
                 attempt += 1
                 if attempt < max_attempts:
-                    logging.warning(f"Timeout on attempt {attempt} of {max_attempts}, retrying...")
+                    logging.warning(
+                        f"Timeout on attempt {attempt} of {max_attempts}, retrying..."
+                    )
                     time.sleep(2)
 
         logging.error("Failed to detect content after all attempts")
@@ -471,11 +499,13 @@ class FetchArticleWithJavaScript(Component):
                 )
 
                 # Add stealth scripts
-                context.add_init_script("""
+                context.add_init_script(
+                    """
                     Object.defineProperty(navigator, 'webdriver', {
                         get: () => undefined
                     });
-                """)
+                """
+                )
 
                 page = context.new_page()
                 page.set_default_timeout(45000)  # 45 second timeout
@@ -496,7 +526,10 @@ class FetchArticleWithJavaScript(Component):
                 if response is None:
                     raise Exception("Failed to fetch page: empty response")
 
-                if response.status in [403, 503] or "cloudflare" in response.url.lower():
+                if (
+                    response.status in [403, 503]
+                    or "cloudflare" in response.url.lower()
+                ):
                     cloudflare_passed = self._wait_for_cloudflare(page)
                     if not cloudflare_passed:
                         logging.error("Failed to pass CloudFlare challenge")
@@ -518,10 +551,14 @@ class FetchArticleWithJavaScript(Component):
                 browser.close()
 
         except Exception as e:
-            logging.error(f"Failed to fetch article '{article.title}' at {article.url}: {e}")
+            logging.error(
+                f"Failed to fetch article '{article.title}' at {article.url}: {e}"
+            )
             return {"article": article}
 
-        logging.info(f"Successfully fetched article '{article.title}' at {article.url} with Playwright")
+        logging.info(
+            f"Successfully fetched article '{article.title}' at {article.url} with Playwright"
+        )
         return {"article": article}
 
 
@@ -538,7 +575,9 @@ class ExtractArticleContent(Component):
 
     def process(self, article: Article) -> dict[str, Article]:
         if not article.html:
-            logger.error(f"No HTML content found for article '{article.title}' at {article.url}")
+            logger.error(
+                f"No HTML content found for article '{article.title}' at {article.url}"
+            )
             return {"article": article}
 
         markdown = html_to_markdown(article.html)
@@ -548,7 +587,9 @@ class ExtractArticleContent(Component):
 
         # Update the article with the Markdown content
         article.markdown = markdown
-        logger.info(f"Extracted article content from '{article.title}' at {article.url}")
+        logger.info(
+            f"Extracted article content from '{article.title}' at {article.url}"
+        )
 
         # Return the article
         return {"article": article}

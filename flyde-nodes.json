@@ -1,0 +1,588 @@
+{
+  "nodes": {
+    "DocumentLoader": {
+      "id": "DocumentLoader",
+      "type": "code",
+      "displayName": "Document Loader",
+      "description": "Loads Markdown from file as a Langchain Document.",
+      "icon": "fa-brands fa-python",
+      "source": {
+        "type": "custom",
+        "data": "custom://swlwi/rag.py/DocumentLoader"
+      },
+      "editorNode": {
+        "id": "DocumentLoader",
+        "displayName": "Document Loader",
+        "description": "Loads Markdown from file as a Langchain Document.",
+        "inputs": {
+          "path": {
+            "description": "Path to the markdown file"
+          }
+        },
+        "outputs": {
+          "document": {
+            "description": "Langchain Document"
+          }
+        },
+        "editorConfig": {
+          "type": "structured"
+        }
+      },
+      "config": {}
+    },
+    "DocumentSplitter": {
+      "id": "DocumentSplitter",
+      "type": "code",
+      "displayName": "Document Splitter",
+      "description": "Splits markdown documents into chunks.",
+      "icon": "fa-brands fa-python",
+      "source": {
+        "type": "custom",
+        "data": "custom://swlwi/rag.py/DocumentSplitter"
+      },
+      "editorNode": {
+        "id": "DocumentSplitter",
+        "displayName": "Document Splitter",
+        "description": "Splits markdown documents into chunks.",
+        "inputs": {
+          "document": {
+            "description": "Document to split"
+          },
+          "chunk_size": {
+            "description": "Size of each chunk"
+          }
+        },
+        "outputs": {
+          "documents": {
+            "description": "Chunks of text"
+          }
+        },
+        "editorConfig": {
+          "type": "structured"
+        }
+      },
+      "config": {}
+    },
+    "ListArticles": {
+      "id": "ListArticles",
+      "type": "code",
+      "displayName": "List Articles",
+      "description": "Lists all articles in the index.",
+      "icon": "fa-brands fa-python",
+      "source": {
+        "type": "custom",
+        "data": "custom://swlwi/rag.py/ListArticles"
+      },
+      "editorNode": {
+        "id": "ListArticles",
+        "displayName": "List Articles",
+        "description": "Lists all articles in the index.",
+        "inputs": {
+          "path": {
+            "description": "Path to the index"
+          }
+        },
+        "outputs": {
+          "article_path": {
+            "description": "Stream of paths to articles"
+          }
+        },
+        "editorConfig": {
+          "type": "structured"
+        }
+      },
+      "config": {}
+    },
+    "OllamaChat": {
+      "id": "OllamaChat",
+      "type": "code",
+      "displayName": "Ollama Chat",
+      "description": "Chat with the Ollama model.",
+      "icon": "fa-brands fa-python",
+      "source": {
+        "type": "custom",
+        "data": "custom://swlwi/rag.py/OllamaChat"
+      },
+      "editorNode": {
+        "id": "OllamaChat",
+        "displayName": "Ollama Chat",
+        "description": "Chat with the Ollama model.",
+        "inputs": {
+          "query": {
+            "description": "Query text"
+          },
+          "context": {
+            "description": "Context text"
+          }
+        },
+        "outputs": {
+          "response": {
+            "description": "Response from the Ollama model"
+          }
+        },
+        "editorConfig": {
+          "type": "structured"
+        }
+      },
+      "config": {}
+    },
+    "OpenAIChat": {
+      "id": "OpenAIChat",
+      "type": "code",
+      "displayName": "Open AIChat",
+      "description": "Chat with the OpenAI model.",
+      "icon": "fa-brands fa-python",
+      "source": {
+        "type": "custom",
+        "data": "custom://swlwi/rag.py/OpenAIChat"
+      },
+      "editorNode": {
+        "id": "OpenAIChat",
+        "displayName": "Open AIChat",
+        "description": "Chat with the OpenAI model.",
+        "inputs": {
+          "query": {
+            "description": "Query text"
+          },
+          "context": {
+            "description": "Context text"
+          }
+        },
+        "outputs": {
+          "response": {
+            "description": "Response from the OpenAI model"
+          }
+        },
+        "editorConfig": {
+          "type": "structured"
+        }
+      },
+      "config": {}
+    },
+    "Retriever": {
+      "id": "Retriever",
+      "type": "code",
+      "displayName": "Retriever",
+      "description": "Retrieves context from a vector store.",
+      "icon": "fa-brands fa-python",
+      "source": {
+        "type": "custom",
+        "data": "custom://swlwi/rag.py/Retriever"
+      },
+      "editorNode": {
+        "id": "Retriever",
+        "displayName": "Retriever",
+        "description": "Retrieves context from a vector store.",
+        "inputs": {
+          "query": {
+            "description": "Query text"
+          },
+          "path": {
+            "description": "Path to the vector store"
+          }
+        },
+        "outputs": {
+          "context": {
+            "description": "Context retrieved from the vector store"
+          }
+        },
+        "editorConfig": {
+          "type": "structured"
+        }
+      },
+      "config": {}
+    },
+    "VectorStore": {
+      "id": "VectorStore",
+      "type": "code",
+      "displayName": "Vector Store",
+      "description": "Stores documents as vectors in a vector store.",
+      "icon": "fa-brands fa-python",
+      "source": {
+        "type": "custom",
+        "data": "custom://swlwi/rag.py/VectorStore"
+      },
+      "editorNode": {
+        "id": "VectorStore",
+        "displayName": "Vector Store",
+        "description": "Stores documents as vectors in a vector store.",
+        "inputs": {
+          "documents": {
+            "description": "Documents to store"
+          },
+          "path": {
+            "description": "Path to the vector store"
+          }
+        },
+        "outputs": {},
+        "editorConfig": {
+          "type": "structured"
+        }
+      },
+      "config": {}
+    },
+    "ExtractArticleContent": {
+      "id": "ExtractArticleContent",
+      "type": "code",
+      "displayName": "Extract Article Content",
+      "description": "Extracts the article content from the HTML and converts it to Markdown.",
+      "icon": "fa-brands fa-python",
+      "source": {
+        "type": "custom",
+        "data": "custom://swlwi/scrape.py/ExtractArticleContent"
+      },
+      "editorNode": {
+        "id": "ExtractArticleContent",
+        "displayName": "Extract Article Content",
+        "description": "Extracts the article content from the HTML and converts it to Markdown.",
+        "inputs": {
+          "article": {
+            "description": "Article"
+          }
+        },
+        "outputs": {
+          "article": {
+            "description": "Article with content"
+          }
+        },
+        "editorConfig": {
+          "type": "structured"
+        }
+      },
+      "config": {}
+    },
+    "ExtractArticles": {
+      "id": "ExtractArticles",
+      "type": "code",
+      "displayName": "Extract Articles",
+      "description": "Extracts articles from the issue page.",
+      "icon": "fa-brands fa-python",
+      "source": {
+        "type": "custom",
+        "data": "custom://swlwi/scrape.py/ExtractArticles"
+      },
+      "editorNode": {
+        "id": "ExtractArticles",
+        "displayName": "Extract Articles",
+        "description": "Extracts articles from the issue page.",
+        "inputs": {
+          "issue": {
+            "description": "Issue"
+          }
+        },
+        "outputs": {
+          "article": {
+            "description": "Article"
+          }
+        },
+        "editorConfig": {
+          "type": "structured"
+        }
+      },
+      "config": {}
+    },
+    "FetchArticle": {
+      "id": "FetchArticle",
+      "type": "code",
+      "displayName": "Fetch Article",
+      "description": "Fetches the article HTML from the Internet.",
+      "icon": "fa-brands fa-python",
+      "source": {
+        "type": "custom",
+        "data": "custom://swlwi/scrape.py/FetchArticle"
+      },
+      "editorNode": {
+        "id": "FetchArticle",
+        "displayName": "Fetch Article",
+        "description": "Fetches the article HTML from the Internet.",
+        "inputs": {
+          "article": {
+            "description": "Article"
+          }
+        },
+        "outputs": {
+          "complete": {
+            "description": "Article with HTML content"
+          },
+          "needs_javascript": {
+            "description": "Article that needs JavaScript to fetch"
+          }
+        },
+        "editorConfig": {
+          "type": "structured"
+        }
+      },
+      "config": {}
+    },
+    "FetchArticleWithJavaScript": {
+      "id": "FetchArticleWithJavaScript",
+      "type": "code",
+      "displayName": "Fetch Article With Java Script",
+      "description": "Fetches the article SPA contents using Playwright with CloudFlare bypass support.",
+      "icon": "fa-brands fa-python",
+      "source": {
+        "type": "custom",
+        "data": "custom://swlwi/scrape.py/FetchArticleWithJavaScript"
+      },
+      "editorNode": {
+        "id": "FetchArticleWithJavaScript",
+        "displayName": "Fetch Article With Java Script",
+        "description": "Fetches the article SPA contents using Playwright with CloudFlare bypass support.",
+        "inputs": {
+          "article": {
+            "description": "Article"
+          }
+        },
+        "outputs": {
+          "article": {
+            "description": "Article with content"
+          }
+        },
+        "editorConfig": {
+          "type": "structured"
+        }
+      },
+      "config": {}
+    },
+    "ListIssues": {
+      "id": "ListIssues",
+      "type": "code",
+      "displayName": "List Issues",
+      "description": "Fetches the index by the URL, parses it and returns a stream of issues and their URLs.",
+      "icon": "fa-brands fa-python",
+      "source": {
+        "type": "custom",
+        "data": "custom://swlwi/scrape.py/ListIssues"
+      },
+      "editorNode": {
+        "id": "ListIssues",
+        "displayName": "List Issues",
+        "description": "Fetches the index by the URL, parses it and returns a stream of issues and their URLs.",
+        "inputs": {
+          "url": {
+            "description": "URL of the index page"
+          },
+          "limit": {
+            "description": "Limit the number of issues to fetch"
+          }
+        },
+        "outputs": {
+          "issue": {
+            "description": "List of issues"
+          }
+        },
+        "editorConfig": {
+          "type": "structured"
+        }
+      },
+      "config": {}
+    },
+    "SaveArticle": {
+      "id": "SaveArticle",
+      "type": "code",
+      "displayName": "Save Article",
+      "description": "Saves the article to a file.",
+      "icon": "fa-brands fa-python",
+      "source": {
+        "type": "custom",
+        "data": "custom://swlwi/scrape.py/SaveArticle"
+      },
+      "editorNode": {
+        "id": "SaveArticle",
+        "displayName": "Save Article",
+        "description": "Saves the article to a file.",
+        "inputs": {
+          "article": {
+            "description": "Article"
+          },
+          "path": {
+            "description": "Path prefix to save the article"
+          }
+        },
+        "outputs": {},
+        "editorConfig": {
+          "type": "structured"
+        }
+      },
+      "config": {}
+    },
+    "SkipExistingIssues": {
+      "id": "SkipExistingIssues",
+      "type": "code",
+      "displayName": "Skip Existing Issues",
+      "description": "Checks if an issue already exists in the index and skips it if it does.",
+      "icon": "fa-brands fa-python",
+      "source": {
+        "type": "custom",
+        "data": "custom://swlwi/scrape.py/SkipExistingIssues"
+      },
+      "editorNode": {
+        "id": "SkipExistingIssues",
+        "displayName": "Skip Existing Issues",
+        "description": "Checks if an issue already exists in the index and skips it if it does.",
+        "inputs": {
+          "issue": {
+            "description": "Issue"
+          },
+          "path": {
+            "description": "Path to the index"
+          },
+          "force_all": {
+            "description": "Force processing all issues"
+          }
+        },
+        "outputs": {
+          "issue": {
+            "description": "Issue"
+          }
+        },
+        "editorConfig": {
+          "type": "structured"
+        }
+      },
+      "config": {}
+    },
+    "Index": {
+      "id": "Index",
+      "type": "visual",
+      "displayName": "Index",
+      "description": "",
+      "icon": "fa-diagram-project",
+      "source": {
+        "type": "file",
+        "data": "Index.flyde"
+      },
+      "editorNode": {
+        "id": "Index",
+        "displayName": "Index",
+        "description": "",
+        "inputs": {},
+        "outputs": {},
+        "editorConfig": {
+          "type": "structured"
+        }
+      },
+      "config": {}
+    },
+    "Rag": {
+      "id": "Rag",
+      "type": "visual",
+      "displayName": "Rag",
+      "description": "",
+      "icon": "fa-diagram-project",
+      "source": {
+        "type": "file",
+        "data": "Rag.flyde"
+      },
+      "editorNode": {
+        "id": "Rag",
+        "displayName": "Rag",
+        "description": "",
+        "inputs": {
+          "query": {
+            "description": "query input (required)"
+          }
+        },
+        "outputs": {
+          "response": {
+            "description": "response output"
+          }
+        },
+        "editorConfig": {
+          "type": "structured"
+        }
+      },
+      "config": {}
+    },
+    "Rag_OpenAI": {
+      "id": "Rag_OpenAI",
+      "type": "visual",
+      "displayName": "Rag_Open AI",
+      "description": "",
+      "icon": "fa-diagram-project",
+      "source": {
+        "type": "file",
+        "data": "Rag_OpenAI.flyde"
+      },
+      "editorNode": {
+        "id": "Rag_OpenAI",
+        "displayName": "Rag_Open AI",
+        "description": "",
+        "inputs": {
+          "query": {
+            "description": "query input (required)"
+          }
+        },
+        "outputs": {
+          "response": {
+            "description": "response output"
+          }
+        },
+        "editorConfig": {
+          "type": "structured"
+        }
+      },
+      "config": {}
+    },
+    "Scrape": {
+      "id": "Scrape",
+      "type": "visual",
+      "displayName": "Scrape",
+      "description": "",
+      "icon": "fa-diagram-project",
+      "source": {
+        "type": "file",
+        "data": "Scrape.flyde"
+      },
+      "editorNode": {
+        "id": "Scrape",
+        "displayName": "Scrape",
+        "description": "",
+        "inputs": {},
+        "outputs": {},
+        "editorConfig": {
+          "type": "structured"
+        }
+      },
+      "config": {}
+    },
+    "Conditional": "@flyde/nodes",
+    "GetAttribute": "@flyde/nodes",
+    "Http": "@flyde/nodes",
+    "InlineValue": "@flyde/nodes"
+  },
+  "groups": [
+    {
+      "title": "Your PyFlyde Nodes",
+      "nodeIds": [
+        "DocumentLoader",
+        "DocumentSplitter",
+        "ListArticles",
+        "OllamaChat",
+        "OpenAIChat",
+        "Retriever",
+        "VectorStore",
+        "ExtractArticleContent",
+        "ExtractArticles",
+        "FetchArticle",
+        "FetchArticleWithJavaScript",
+        "ListIssues",
+        "SaveArticle",
+        "SkipExistingIssues",
+        "Index",
+        "Rag",
+        "Rag_OpenAI",
+        "Scrape"
+      ]
+    },
+    {
+      "title": "PyFlyde Standard Nodes",
+      "nodeIds": [
+        "Conditional",
+        "GetAttribute",
+        "Http",
+        "InlineValue"
+      ]
+    }
+  ]
+}

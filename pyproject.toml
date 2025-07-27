@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "swlwi"
-version = "0.0.1"
+version = "0.0.2"
 requires-python = ">= 3.10"
 authors = [{ name = "Vladimir Sibirov" }]
 description = "Software Leads Weekly Intelligent Index"
@@ -21,7 +21,7 @@ dependencies = [
     "langchain-text-splitters ~= 0.3.0",
     "markdownify ~= 1.1.0",
     "playwright >= 1.0.0, < 2.0.0",
-    "pyflyde ~= 0.0.12",
+    "pyflyde ~= 0.1.0",
     "requests >= 2.0.0, < 3.0.0",
     "sentence-transformers ~= 4.1.0",
     "streamlit ~= 1.46.0",

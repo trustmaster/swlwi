@@ -1,70 +1,82 @@
-imports:
-  "@flyde/stdlib":
-    - InlineValue
-  swlwi/rag.flyde.ts:
-    - DocumentLoader
-    - DocumentSplitter
-    - ListArticles
-    - VectorStore
+imports: {}
 node:
   instances:
     - pos:
-        x: -123.06474121093748
-        y: -113.7823486328125
+        x: -409.0647412109375
+        y: 12.2176513671875
       id: DocumentLoader-xx04bf6
       inputConfig: {}
       nodeId: DocumentLoader
-    - pos:
-        x: -96.01762207031248
-        y: -325.7375183105469
-      id: nayy3m38b9mqwjx7spc7h654
-      inputConfig: {}
-      nodeId: InlineValue__nayy3m38b9mqwjx7spc7h654
-      macroId: InlineValue
-      macroData:
-        value:
-          type: string
-          value: ./index
+      config:
+        path:
+          type: dynamic
+          value: "{{path}}"
+      type: code
+      source:
+        type: custom
+        data: custom://swlwi/rag.py/DocumentLoader
     - pos:
         x: -123.938115234375
         y: 33.571452636718746
       id: DocumentSplitter-hi04btp
       inputConfig: {}
       nodeId: DocumentSplitter
+      config:
+        document:
+          type: dynamic
+          value: "{{document}}"
+        chunk_size:
+          type: dynamic
+          value: "{{chunk_size}}"
+      type: code
+      source:
+        type: custom
+        data: custom://swlwi/rag.py/DocumentSplitter
     - pos:
-        x: -99.54382446289063
-        y: -221.39071166992187
+        x: -652.5438244628906
+        y: 12.60928833007813
       id: ListArticles-7z24bv6
       inputConfig: {}
       nodeId: ListArticles
+      config:
+        path:
+          type: string
+          value: ./index
+      type: code
+      source:
+        type: custom
+        data: custom://swlwi/rag.py/ListArticles
     - pos:
-        x: -69.61044799804688
-        y: 178.15218305477418
+        x: 142.38955200195312
+        y: 42.152183054774184
       id: VectorStore-h104bej
       inputConfig: {}
       nodeId: VectorStore
-    - pos:
-        x: 105.98485046386713
-        y: 23.353573622321
-      id: cd3jei26nmk80q7x66gmics3
-      inputConfig: {}
-      nodeId: InlineValue__cd3jei26nmk80q7x66gmics3
-      macroId: InlineValue
-      macroData:
-        value:
+      config:
+        documents:
+          type: dynamic
+          value: "{{documents}}"
+        path:
           type: string
           value: ./index/vectors
+      type: code
+      source:
+        type: custom
+        data: custom://swlwi/rag.py/VectorStore
     - pos:
-        x: 146.69632324218747
-        y: -111.8844449153894
+        x: -409.3036767578126
+        y: 95.1155550846106
       id: fsz82wvbt98cswdnj5oapm9n
       inputConfig: {}
-      nodeId: InlineValue__fsz82wvbt98cswdnj5oapm9n
-      macroId: InlineValue
-      macroData:
+      nodeId: InlineValue
+      config:
         value:
           type: number
           value: 2000
+      type: code
+      source:
+        type: package
+        data: "@flyde/nodes"
   connections:
     - from:
         insId: DocumentLoader-xx04bf6
@@ -79,23 +91,11 @@ node:
         insId: DocumentLoader-xx04bf6
         pinId: path
     - from:
-        insId: nayy3m38b9mqwjx7spc7h654
-        pinId: value
-      to:
-        insId: ListArticles-7z24bv6
-        pinId: path
-    - from:
         insId: DocumentSplitter-hi04btp
         pinId: documents
       to:
         insId: VectorStore-h104bej
         pinId: documents
-    - from:
-        insId: cd3jei26nmk80q7x66gmics3
-        pinId: value
-      to:
-        insId: VectorStore-h104bej
-        pinId: path
     - from:
         insId: fsz82wvbt98cswdnj5oapm9n
         pinId: value
