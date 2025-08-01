@@ -6,6 +6,7 @@ import time
 from datetime import datetime
 from typing import Any, Optional
 
+import chardet
 import requests
 from playwright.sync_api import Page, sync_playwright
 from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
@@ -52,7 +53,7 @@ class HTTPClient:
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
                 "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
                 "Accept-Language": "en-US,en;q=0.5",
-                "Accept-Encoding": "gzip, deflate, br",
+                "Accept-Encoding": "gzip, deflate",
                 "DNT": "1",
                 "Connection": "keep-alive",
                 "Upgrade-Insecure-Requests": "1",
@@ -82,7 +83,15 @@ class HTTPClient:
             domain = extract_domain_from_url(url)
             self.rate_limiter.wait(domain)
 
+        # Ensure proper handling of compressed content
+        if "stream" not in kwargs:
+            kwargs["stream"] = False
+
         response = self.session.get(url, **kwargs)
+
+        # Force decompression of content if it's compressed
+        _ = response.content  # This triggers decompression
+
         return response
 
     def is_cloudflare_protected(self, response: requests.Response) -> bool:
@@ -105,11 +114,74 @@ class HTTPClient:
         Returns:
             Decoded content as UTF-8 bytes
         """
-        encoding = response.encoding.lower() if response.encoding and response.encoding.lower() != "utf-8" else "utf-8"
+        # Ensure content is decompressed by accessing it
+        content = response.content
+        logger.debug(f"Raw content length: {len(content)} bytes")
 
-        if encoding != "utf-8":
-            return response.content.decode(encoding).encode("utf-8")
-        return response.content
+        # Check if content appears to be compressed but wasn't decompressed
+        if content.startswith(b"\x1f\x8b"):  # gzip magic number
+            logger.warning("Content appears to be gzip compressed but wasn't decompressed")
+        elif content.startswith(b"BZh"):  # bzip2 magic number
+            logger.warning("Content appears to be bzip2 compressed but wasn't decompressed")
+        elif len(content) > 0 and content[0:2] in [b"\x78\x9c", b"\x78\x01", b"\x78\xda"]:  # zlib
+            logger.warning("Content appears to be zlib compressed but wasn't decompressed")
+
+        # Get the encoding from response headers or detect it
+        encoding = response.encoding
+        logger.debug(f"Response encoding from headers: {encoding}")
+
+        # If no encoding is specified or it's invalid, try to detect it
+        if not encoding or encoding.lower() == "iso-8859-1":
+            # requests defaults to ISO-8859-1 when no charset is specified
+            # Try to detect the actual encoding from content
+            try:
+                detected = chardet.detect(content[:10000])  # Only check first 10KB for speed
+                if detected and detected["encoding"] and detected["confidence"] > 0.7:
+                    encoding = detected["encoding"]
+                    logger.debug(f"Detected encoding: {encoding} (confidence: {detected['confidence']:.2f})")
+                else:
+                    encoding = "utf-8"
+                    logger.debug("Using UTF-8 fallback (low confidence or no detection)")
+            except ImportError:
+                # chardet not available, fallback to utf-8
+                encoding = "utf-8"
+                logger.debug("chardet not available, using UTF-8 fallback")
+
+        # Ensure we have a valid encoding
+        if not encoding:
+            encoding = "utf-8"
+
+        try:
+            # Decode content using detected/specified encoding and re-encode as UTF-8
+            if encoding.lower() != "utf-8":
+                decoded_content = content.decode(encoding, errors="replace")
+                result = decoded_content.encode("utf-8")
+                logger.debug(f"Successfully decoded {len(content)} bytes using {encoding}")
+                return result
+            else:
+                # Even if encoding is UTF-8, validate and clean the content
+                try:
+                    # Try to decode as UTF-8 to validate
+                    content.decode("utf-8")
+                    logger.debug(f"Content already in UTF-8, returning {len(content)} bytes")
+                    return content
+                except UnicodeDecodeError:
+                    # Content is not valid UTF-8, decode with error replacement
+                    decoded_content = content.decode("utf-8", errors="replace")
+                    result = decoded_content.encode("utf-8")
+                    logger.debug(f"Fixed invalid UTF-8 content, returning {len(result)} bytes")
+                    return result
+        except (UnicodeDecodeError, LookupError) as e:
+            logger.warning(f"Encoding error with {encoding}: {e}, falling back to UTF-8")
+            # Fallback to UTF-8 with error replacement if encoding fails
+            try:
+                decoded_content = content.decode("utf-8", errors="replace")
+                return decoded_content.encode("utf-8")
+            except UnicodeDecodeError:
+                logger.warning("UTF-8 fallback failed, using latin-1 as last resort")
+                # Last resort: use latin-1 which can decode any byte sequence
+                decoded_content = content.decode("latin-1", errors="replace")
+                return decoded_content.encode("utf-8")
 
 
 class BrowserClient:
@@ -177,7 +249,12 @@ class BrowserClient:
             time.sleep(2)
 
             # Get the final HTML after all JavaScript execution
-            html_content = page.content().encode("utf-8")
+            html_content = page.content()
+
+            # Ensure proper UTF-8 encoding
+            if isinstance(html_content, str):
+                html_content = html_content.encode("utf-8", errors="replace")
+
             page.close()
             return html_content
 

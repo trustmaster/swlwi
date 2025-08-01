@@ -447,7 +447,7 @@ Article summary
         save_article.process(article=mock_article, path=test_path)
 
         # Check that the file was opened with the correct arguments
-        mock_open.assert_called_once_with(expected_path, "w")
+        mock_open.assert_called_once_with(expected_path, "w", encoding="utf-8")
         mock_open().write.assert_called_once_with(expected_header + "Some text")
 
 

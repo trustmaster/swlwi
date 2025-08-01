@@ -12,6 +12,7 @@ readme = "Readme.md"
 
 dependencies = [
     "beautifulsoup4 >= 4.0.0, < 5.0.0",
+    "chardet >= 5.0.0, < 6.0.0",
     "langchain ~= 0.3.0",
     "langchain-community ~= 0.3.2",
     "langchain-huggingface ~= 0.3.0",
