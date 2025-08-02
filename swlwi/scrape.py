@@ -1,14 +1,24 @@
 """Components for scraping the SWLW issues and their contents."""
 
+import atexit
 import logging
 import os
+import signal
+import sys
 
 import requests
 from bs4 import BeautifulSoup
 from flyde.io import Input, InputMode, Output, Requiredness
 from flyde.node import Component
 
-from swlwi.net import BrowserClient, HTTPClient, extract_domain_from_url, needs_javascript_domain, should_skip_domain
+from swlwi.net import (
+    BrowserClient,
+    HTTPClient,
+    extract_domain_from_url,
+    has_meaningful_content,
+    needs_javascript_domain,
+    should_skip_domain,
+)
 from swlwi.parser import (
     SiteParser,
     clean_markdown,
@@ -19,6 +29,51 @@ from swlwi.schema import Article, Issue
 log_level = getattr(logging, os.getenv("LOG_LEVEL", "INFO").upper(), logging.INFO)
 logging.basicConfig(level=log_level)
 logger = logging.getLogger(__name__)
+
+# Shared browser client instance to avoid initialization overhead
+_shared_browser_client = None
+
+
+def get_shared_browser_client():
+    """Get or create a shared browser client instance."""
+    global _shared_browser_client
+    if _shared_browser_client is None:
+        try:
+            logger.info("Initializing shared browser client...")
+            _shared_browser_client = BrowserClient()
+            logger.info("Shared browser client initialized successfully")
+        except Exception as e:
+            logger.error(f"Failed to initialize shared browser client: {e}")
+            # Return None instead of crashing - calling code should handle this
+            return None
+    return _shared_browser_client
+
+
+def cleanup_shared_browser_client():
+    """Cleanup the shared browser client when shutting down."""
+    global _shared_browser_client
+    if _shared_browser_client is not None:
+        try:
+            logger.info("Closing shared browser client...")
+            _shared_browser_client.close()
+            logger.info("Shared browser client closed successfully")
+        except Exception as e:
+            logger.error(f"Error closing shared browser client: {e}")
+        finally:
+            _shared_browser_client = None
+
+
+def _signal_handler(signum, frame):
+    """Handle interrupt signals gracefully."""
+    logger.info(f"Received signal {signum}, shutting down gracefully...")
+    cleanup_shared_browser_client()
+    sys.exit(0)
+
+
+# Register signal handlers and cleanup function
+signal.signal(signal.SIGINT, _signal_handler)
+signal.signal(signal.SIGTERM, _signal_handler)
+atexit.register(cleanup_shared_browser_client)
 
 
 class ListIssues(Component):
@@ -82,17 +137,6 @@ class SkipExistingIssues(Component):
     }
 
     def process(self, issue: Issue, path: str, force_all: bool = False):
-        print(
-            "Issue in SkipExistingIssues.inputs:",
-            self.inputs["issue"].type,
-            self.inputs["issue"].type.__module__,
-        )
-        print(
-            "Issue in SkipExistingIssues.outputs:",
-            self.outputs["issue"].type,
-            self.outputs["issue"].type.__module__,
-        )
-        print("Type of value being sent:", type(issue), type(issue).__module__)
         logger.debug(f"Checking if issue #{issue.num} exists. Force all: {force_all}")
         if force_all:
             logger.info(f"Force processing issue #{issue.num}")
@@ -171,28 +215,45 @@ class FetchArticle(Component):
         if should_skip_domain(domain):
             return {"complete": article}
 
-        if needs_javascript_domain(domain):
-            logging.debug(f"Article '{article.title}' at {article.url} is on {domain} and needs JavaScript to fetch")
-            return {"needs_javascript": article}
-
+        # Try HTTP first regardless of domain - let content analysis decide
         try:
-            response = self.http_client.get(article.url)
+            response = self.http_client.get(article.url, timeout=10)
 
+            # Check for various protection/JS requirements
             if self.http_client.is_cloudflare_protected(response):
-                logging.warning(f"CloudFlare protection detected for '{article.title}' at {article.url}")
+                logger.warning(
+                    f"CloudFlare protection detected for '{article.title}' at {article.url} - routing to browser client"
+                )
                 return {"needs_javascript": article}
 
             if self.http_client.needs_javascript(response):
-                logging.debug(f"Article '{article.title}' at {article.url} needs JavaScript to fetch")
+                logger.debug(
+                    f"Article '{article.title}' at {article.url} needs JavaScript based on content - routing to browser client"
+                )
                 return {"needs_javascript": article}
 
-            article.html = self.http_client.decode_response_content(response)
+            # Additional content quality check
+            decoded_content = self.http_client.decode_response_content(response)
+            if not has_meaningful_content(decoded_content):
+                logger.debug(
+                    f"Article '{article.title}' at {article.url} has poor content quality - trying browser client"
+                )
+                return {"needs_javascript": article}
+
+            # Domain-based fallback check (only after content analysis)
+            if needs_javascript_domain(domain):
+                logger.debug(
+                    f"Article '{article.title}' at {article.url} is on JS-heavy domain {domain} - trying browser client"
+                )
+                return {"needs_javascript": article}
+
+            article.html = decoded_content
 
         except Exception as e:
-            logging.error(f"Failed to fetch article '{article.title}' at {article.url}: {e}")
+            logger.error(f"Failed to fetch article '{article.title}' at {article.url}: {e} - routing to browser client")
             return {"needs_javascript": article}
 
-        logging.info(f"Fetched article '{article.title}' at {article.url}")
+        logger.info(f"Fetched article '{article.title}' at {article.url} via HTTP")
         return {"complete": article}
 
 
@@ -209,21 +270,43 @@ class FetchArticleWithJavaScript(Component):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.browser_client = BrowserClient()
+        try:
+            self.browser_client = get_shared_browser_client()
+            logger.info("Browser client initialized successfully for JavaScript fetching")
+        except Exception as e:
+            logger.error(f"Failed to initialize browser client: {e}")
+            self.browser_client = None
 
     def process(self, article: Article) -> dict[str, Article]:
+        logger.info(f"Starting browser fetch for '{article.title}' at {article.url}")
+
+        # Check if browser client is available
+        if not self.browser_client:
+            logger.error(f"Browser client not available for '{article.title}' - setting empty content")
+            article.html = b""
+            return {"article": article}
+
         try:
-            html_content = self.browser_client.fetch(article.url)
+            # Add timeout to prevent hanging - use shorter timeout for faster failure
+            html_content = self.browser_client.fetch(article.url, timeout=10000)  # 10 seconds
 
             if html_content:
                 article.html = html_content
-                logging.info(f"Successfully fetched article '{article.title}' at {article.url} with Playwright")
+                logger.info(
+                    f"Successfully fetched article '{article.title}' at {article.url} with Playwright ({len(html_content)} bytes)"
+                )
             else:
-                logging.error(f"Failed to load content for '{article.title}'")
+                logger.warning(f"Browser returned no content for '{article.title}' - continuing with empty HTML")
+                # Continue processing even if no content - don't block the pipeline
+                article.html = b""
 
         except Exception as e:
-            logging.error(f"Failed to fetch article '{article.title}' at {article.url}: {e}")
+            logger.error(f"Failed to fetch article '{article.title}' at {article.url}: {e}")
+            logger.debug(f"Exception type: {type(e).__name__}")
+            # Set empty HTML to ensure pipeline continues
+            article.html = b""
 
+        logger.info(f"Completed browser fetch for '{article.title}' - continuing pipeline")
         return {"article": article}
 
 
@@ -240,7 +323,10 @@ class ExtractArticleContent(Component):
 
     def process(self, article: Article) -> dict[str, Article]:
         if not article.html:
-            logger.error(f"No HTML content found for article '{article.title}' at {article.url}")
+            logger.warning(
+                f"No HTML content found for article '{article.title}' at {article.url} - setting placeholder content"
+            )
+            article.markdown = f"Content could not be fetched for this article. Please visit the source: {article.url}"
             return {"article": article}
 
         try:
@@ -254,6 +340,11 @@ class ExtractArticleContent(Component):
                 logger.warning(
                     f"Article content seems too short ({len(markdown)} chars) for '{article.title}' at {article.url}"
                 )
+                # If content is too short, add a note but don't fail
+                if not markdown.strip():
+                    markdown = (
+                        f"Content could not be extracted for this article. Please visit the source: {article.url}"
+                    )
 
             # Update the article with the Markdown content
             article.markdown = markdown
@@ -263,9 +354,9 @@ class ExtractArticleContent(Component):
 
         except Exception as e:
             logger.error(f"Failed to process article content for '{article.title}' at {article.url}: {e}")
-            article.markdown = f"Error processing content: {str(e)}"
+            article.markdown = f"Error processing content: {str(e)}\n\nPlease visit the source: {article.url}"
 
-        # Return the article
+        # Return the article - always continue the pipeline
         return {"article": article}
 
 
