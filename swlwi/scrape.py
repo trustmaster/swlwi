@@ -1,10 +1,7 @@
 """Components for scraping the SWLW issues and their contents."""
 
-import atexit
 import logging
 import os
-import signal
-import sys
 
 import requests
 from bs4 import BeautifulSoup
@@ -30,58 +27,13 @@ log_level = getattr(logging, os.getenv("LOG_LEVEL", "INFO").upper(), logging.INF
 logging.basicConfig(level=log_level)
 logger = logging.getLogger(__name__)
 
-# Shared browser client instance to avoid initialization overhead
-_shared_browser_client = None
-
-
-def get_shared_browser_client():
-    """Get or create a shared browser client instance."""
-    global _shared_browser_client
-    if _shared_browser_client is None:
-        try:
-            logger.info("Initializing shared browser client...")
-            _shared_browser_client = BrowserClient()
-            logger.info("Shared browser client initialized successfully")
-        except Exception as e:
-            logger.error(f"Failed to initialize shared browser client: {e}")
-            # Return None instead of crashing - calling code should handle this
-            return None
-    return _shared_browser_client
-
-
-def cleanup_shared_browser_client():
-    """Cleanup the shared browser client when shutting down."""
-    global _shared_browser_client
-    if _shared_browser_client is not None:
-        try:
-            logger.info("Closing shared browser client...")
-            _shared_browser_client.close()
-            logger.info("Shared browser client closed successfully")
-        except Exception as e:
-            logger.error(f"Error closing shared browser client: {e}")
-        finally:
-            _shared_browser_client = None
-
-
-def _signal_handler(signum, frame):
-    """Handle interrupt signals gracefully."""
-    logger.info(f"Received signal {signum}, shutting down gracefully...")
-    cleanup_shared_browser_client()
-    sys.exit(0)
-
-
-# Register signal handlers and cleanup function
-signal.signal(signal.SIGINT, _signal_handler)
-signal.signal(signal.SIGTERM, _signal_handler)
-atexit.register(cleanup_shared_browser_client)
-
 
 class ListIssues(Component):
     """Fetches the index by the URL, parses it and returns a stream of issues and their URLs."""
 
     inputs = {
         "url": Input(description="URL of the index page", type=str),
-        "limit": Input(description="Limit the number of issues to fetch", type=int, mode=InputMode.STICKY),  # type: ignore
+        "limit": Input(description="Limit the number of issues to fetch", type=int, mode=InputMode.STICKY),
     }
 
     outputs = {
@@ -221,36 +173,28 @@ class FetchArticle(Component):
 
             # Check for various protection/JS requirements
             if self.http_client.is_cloudflare_protected(response):
-                logger.warning(
-                    f"CloudFlare protection detected for '{article.title}' at {article.url} - routing to browser client"
-                )
+                logger.warning(f"CloudFlare protection detected for '{article.title}' at {article.url}")
                 return {"needs_javascript": article}
 
             if self.http_client.needs_javascript(response):
-                logger.debug(
-                    f"Article '{article.title}' at {article.url} needs JavaScript based on content - routing to browser client"
-                )
+                logger.debug(f"Article '{article.title}' at {article.url} needs JavaScript based on content ")
                 return {"needs_javascript": article}
 
             # Additional content quality check
             decoded_content = self.http_client.decode_response_content(response)
             if not has_meaningful_content(decoded_content):
-                logger.debug(
-                    f"Article '{article.title}' at {article.url} has poor content quality - trying browser client"
-                )
+                logger.debug(f"Article '{article.title}' at {article.url} has poor content quality")
                 return {"needs_javascript": article}
 
             # Domain-based fallback check (only after content analysis)
             if needs_javascript_domain(domain):
-                logger.debug(
-                    f"Article '{article.title}' at {article.url} is on JS-heavy domain {domain} - trying browser client"
-                )
+                logger.debug(f"Article '{article.title}' at {article.url} is on JS-heavy domain {domain}")
                 return {"needs_javascript": article}
 
             article.html = decoded_content
 
         except Exception as e:
-            logger.error(f"Failed to fetch article '{article.title}' at {article.url}: {e} - routing to browser client")
+            logger.error(f"Failed to fetch article '{article.title}' at {article.url}: {e}")
             return {"needs_javascript": article}
 
         logger.info(f"Fetched article '{article.title}' at {article.url} via HTTP")
@@ -271,7 +215,7 @@ class FetchArticleWithJavaScript(Component):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         try:
-            self.browser_client = get_shared_browser_client()
+            self.browser_client = BrowserClient()
             logger.info("Browser client initialized successfully for JavaScript fetching")
         except Exception as e:
             logger.error(f"Failed to initialize browser client: {e}")
@@ -282,7 +226,7 @@ class FetchArticleWithJavaScript(Component):
 
         # Check if browser client is available
         if not self.browser_client:
-            logger.error(f"Browser client not available for '{article.title}' - setting empty content")
+            logger.error(f"Browser client not available for '{article.title}'")
             article.html = b""
             return {"article": article}
 
@@ -296,7 +240,7 @@ class FetchArticleWithJavaScript(Component):
                     f"Successfully fetched article '{article.title}' at {article.url} with Playwright ({len(html_content)} bytes)"
                 )
             else:
-                logger.warning(f"Browser returned no content for '{article.title}' - continuing with empty HTML")
+                logger.warning(f"Browser returned no content for '{article.title}'L")
                 # Continue processing even if no content - don't block the pipeline
                 article.html = b""
 
@@ -306,7 +250,7 @@ class FetchArticleWithJavaScript(Component):
             # Set empty HTML to ensure pipeline continues
             article.html = b""
 
-        logger.info(f"Completed browser fetch for '{article.title}' - continuing pipeline")
+        logger.info(f"Completed browser fetch for '{article.title}'")
         return {"article": article}
 
 
@@ -323,38 +267,16 @@ class ExtractArticleContent(Component):
 
     def process(self, article: Article) -> dict[str, Article]:
         if not article.html:
-            logger.warning(
-                f"No HTML content found for article '{article.title}' at {article.url} - setting placeholder content"
-            )
-            article.markdown = f"Content could not be fetched for this article. Please visit the source: {article.url}"
+            logger.warning(f"No HTML content found for article '{article.title}' at {article.url}")
             return {"article": article}
 
-        try:
-            markdown = html_to_markdown(article.html)
+        markdown = html_to_markdown(article.html)
 
-            # Clean up the Markdown content
-            markdown = clean_markdown(markdown)
+        # Clean up the Markdown content
+        markdown = clean_markdown(markdown)
 
-            # Validate that we have meaningful content
-            if len(markdown.strip()) < 50:
-                logger.warning(
-                    f"Article content seems too short ({len(markdown)} chars) for '{article.title}' at {article.url}"
-                )
-                # If content is too short, add a note but don't fail
-                if not markdown.strip():
-                    markdown = (
-                        f"Content could not be extracted for this article. Please visit the source: {article.url}"
-                    )
-
-            # Update the article with the Markdown content
-            article.markdown = markdown
-            logger.info(
-                f"Extracted article content from '{article.title}' at {article.url} ({len(markdown)} characters)"
-            )
-
-        except Exception as e:
-            logger.error(f"Failed to process article content for '{article.title}' at {article.url}: {e}")
-            article.markdown = f"Error processing content: {str(e)}\n\nPlease visit the source: {article.url}"
+        # Update the article with the Markdown content only if we have content
+        article.markdown = markdown
 
         # Return the article - always continue the pipeline
         return {"article": article}
@@ -392,12 +314,5 @@ Reading time: {article.reading_time} minutes
                 content = header + (article.markdown or "")
                 file.write(content)
                 logger.debug(f"Successfully wrote {len(content)} characters to {filename}")
-        except UnicodeEncodeError as e:
-            logger.error(f"Unicode encoding error writing {filename}: {e}")
-            # Try with error replacement
-            with open(filename, "w", encoding="utf-8", errors="replace") as file:
-                content = header + (article.markdown or "")
-                file.write(content)
-                logger.warning("Wrote file with character replacements due to encoding issues")
         except Exception as e:
             logger.error(f"Failed to write article file {filename}: {e}")

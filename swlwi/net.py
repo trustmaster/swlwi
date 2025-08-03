@@ -1,5 +1,6 @@
 """Network client utilities for web scraping with HTTP and browser automation."""
 
+import atexit
 import logging
 import re
 import time
@@ -210,12 +211,25 @@ class HTTPClient:
 class BrowserClient:
     """Browser client for fetching JavaScript-heavy websites with CloudFlare bypass support."""
 
+    _instance: Optional["BrowserClient"] = None
+    _initialized: bool = False
+
+    def __new__(cls, rate_limiter: Optional[RateLimiter] = None):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
     def __init__(self, rate_limiter: Optional[RateLimiter] = None):
-        self.rate_limiter = rate_limiter or RateLimiter()
-        self._browser: Optional[Any] = None
-        self._context: Optional[Any] = None
-        self._playwright: Optional[Any] = None
-        self._page: Optional[Page] = None
+        if not self._initialized:
+            self.rate_limiter = rate_limiter or RateLimiter()
+            self._browser: Optional[Any] = None
+            self._context: Optional[Any] = None
+            self._playwright: Optional[Any] = None
+            self._page: Optional[Page] = None
+            BrowserClient._initialized = True
+
+            # Register cleanup for normal exit
+            atexit.register(self.close)
 
     def fetch(self, url: str, timeout: int = 5000) -> Optional[bytes]:
         """

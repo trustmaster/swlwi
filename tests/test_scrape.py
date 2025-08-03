@@ -318,11 +318,20 @@ class TestExtractArticles(unittest.TestCase):
 class TestFetchArticle(unittest.TestCase):
     @patch("requests.Session.get")
     def test_fetch_article(self, mock_get):
-        example_html = """<h1>Some Article</h1>
-<div class="post-content">
-    <p>Some text</p>
-    <p>Some more text</p>
-</div>"""
+        example_html = """<!DOCTYPE html>
+<html>
+<head>
+    <title>Some Article</title>
+</head>
+<body>
+    <h1>Some Article</h1>
+    <div class="post-content">
+        <p>This is a meaningful paragraph with enough content to pass the content quality checks. It contains more than 100 characters of actual text content.</p>
+        <p>This is another meaningful paragraph that adds to the article content. Together these paragraphs should provide enough text to satisfy the content validation requirements.</p>
+        <p>A third paragraph to ensure we have multiple paragraphs and substantial content for the article processing pipeline.</p>
+    </div>
+</body>
+</html>"""
 
         # Mock the response object
         mock_response = MagicMock()
