@@ -184,10 +184,22 @@ class OllamaChat(Component):
         logger.info(f"Loaded context:\n\n {context}\n\n")
 
         # System prompt tells the agent about their role and sets ground rules
-        system_prompt = "Given a question and context by user, use the context and your prior knowledge to answer the user's question."
+        system_prompt = """You are a helpful assistant that answers questions based on provided context. Follow these guidelines:
 
-        # Our user prompt
-        prompt = f"Question: {query}\n\nContext: {context}"
+1. PRIORITIZE the provided context over your general knowledge
+2. If the context contains relevant information, base your answer primarily on it
+3. If the context doesn't contain enough information to answer the question, use your general knowledge
+4. Give comprehensive and detailed answer to the original question
+5. If you refer to a source text, article, or author, mention the name of the source or omit it if you don't know
+6. Combine information from multiple sources when neccessary"""
+
+        # Our user prompt with structured format
+        prompt = f"""Context:
+{context}
+
+Question: {query}
+
+Please answer the question based primarily on the provided context"""
 
         # Invoke the model
         response = ollama.chat(
@@ -218,8 +230,21 @@ class OpenAIChat(Component):
         self._init()
 
         # Construct the prompts
-        system_prompt = "Given a question and context by user, use the context and your prior knowledge to answer the user's question."
-        prompt = f"Question: {query}\n\nContext: {context}"
+        system_prompt = """You are a helpful assistant that answers questions based on provided context. Follow these guidelines:
+
+1. PRIORITIZE the provided context over your general knowledge
+2. If the context contains relevant information, base your answer primarily on it
+3. If the context doesn't contain enough information to answer the question, use your general knowledge
+4. Give comprehensive and detailed answer to the original question
+5. If you refer to a source text, article, or author, mention the name of the source or omit it if you don't know
+6. Combine information from multiple sources when neccessary"""
+
+        prompt = f"""Context:
+{context}
+
+Question: {query}
+
+Please answer the question based primarily on the provided context"""
 
         # Invoke the model
         response = self._llm.invoke([("system", system_prompt), ("human", prompt)])
